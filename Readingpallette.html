@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Koala Spies Sydney – Tile 1</title>
+
+  <!-- iPhone/iPad safe viewport (prevents weird zoom + respects notch) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #1e1e1e;
+      --ink-light: #fafafa;
+      --ink-muted: #d0d0d0;
+      --light-bg: #f4f4f4;
+      --ink-dark: #111;
+
+      --accent1: #009688;
+      --accent2: #d35400;
+      --accent3: #f1c40f;
+      --accent4: #8e44ad;
+      --accent5: #3498db;
+      --accent6: #e67e22;
+
+      --safe-top: env(safe-area-inset-top);
+      --safe-left: env(safe-area-inset-left);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg-dark);
+      color: var(--ink-light);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      -webkit-text-size-adjust: 100%;
+      overflow-x: hidden;
+    }
+
+    header {
+      background: var(--light-bg);
+      color: var(--ink-dark);
+      text-align: center;
+      padding: 30px 20px;
+      font-size: 2.6rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    main {
+      flex: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 30px;
+      width: 100%;
+    }
+
+    .tile-header {
+      background: var(--accent5);
+      padding: 50px 30px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .tile-header h2 {
+      margin: 0;
+      font-size: 2.4rem;
+      color: #fff;
+    }
+
+    /* Make iframe behave on iOS Safari + Android Chrome:
+       - Use responsive height with a solid minimum
+       - Avoid huge vh jumps where mobile browser UI shrinks/expands */
+    .tile-content iframe {
+      width: 100%;
+      height: clamp(420px, 70vh, 900px); /* computer first, still safe on small screens */
+      min-height: 500px;
+      border: none;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      display: block;
+      background: #fff; /* helps when PDF viewer paints late */
+      -webkit-overflow-scrolling: touch;
+    }
+
+    a {
+      color: var(--accent5);
+      font-weight: bold;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+
+    footer {
+      background: var(--light-bg);
+      color: var(--ink-dark);
+      text-align: center;
+      padding: 20px;
+      margin-top: 40px;
+      font-size: 1.1rem;
+    }
+
+    footer nav {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      line-height: 1.6;
+    }
+
+    footer nav a {
+      margin: 0;
+      color: var(--ink-dark);
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .questions {
+      font-family: 'Patrick Hand', cursive !important;
+      text-transform: none !important;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px 30px;
+      line-height: 1.8;
+      font-size: 1.25rem;
+      color: #f5f5f5;
+    }
+
+    .questions ol {
+      margin-left: 25px;
+      padding-left: 10px;
+    }
+
+    .questions li { margin-bottom: 25px; }
+
+    .questions ol ol {
+      margin-top: 15px;
+      margin-bottom: 20px;
+    }
+
+    .questions ol ol li {
+      margin-bottom: 10px;
+      font-size: 1.15rem;
+    }
+
+    /* ---------- QR: top-left, click to show/hide (kept) ---------- */
+    .qr-float{
+      position: fixed;
+      top: calc(12px + var(--safe-top));
+      left: calc(12px + var(--safe-left));
+      z-index: 9999;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .qr-toggle{
+      appearance: none;
+      border: 5px;
+      cursor: pointer;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      background: rgba(183, 185, 168, 0.12);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 10px 26px rgba(216, 216, 204, 0.28);
+      line-height: 1;
+      color: var(--accent2);
+
+    }
+
+
+    .qr-toggle:focus-visible{
+      outline: 2px solid rgba(255,255,255,.65);
+      outline-offset: 2px;
+    }
+
+    .qr-container{
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 14px;
+      padding: 10px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 10px 26px rgba(0,0,0,.28);
+    }
+
+    /* prevent canvas blur on some mobiles by matching CSS size to pixel size */
+    #qrCanvas{
+      width: 130px;
+      height: 130px;
+      display: block;
+      border-radius: 8px;
+      background: #e10505;
+    }
+
+    /* ---------- Download link centered under palette ---------- */
+    .download-center {
+      display: block;
+      text-align: center;
+      margin: 14px auto 0;
+      font-size: 1.1rem;
+    }
+
+    /* MOBILE / TABLET OPTIMISATION (still computer-first above) */
+    @media (max-width: 900px) {
+      main { padding: 28px 18px; }
+      header { font-size: 2.1rem; padding: 22px 16px; }
+      .questions { padding: 18px 18px; margin: 30px auto; }
+    }
+
+    @media (max-width: 768px) {
+      header { font-size: 1.9rem; padding: 18px 14px; letter-spacing: 1px; }
+      .tile-header h2 { font-size: 1.7rem; }
+      .tile-content iframe {
+        height: 60vh;
+        min-height: 360px;
+        border-radius: 12px;
+      }
+      .questions { font-size: 1.18rem; line-height: 1.75; }
+      footer nav { gap: 16px; }
+    }
+
+    @media (max-width: 420px) {
+      .tile-content iframe {
+        height: 58vh;
+        min-height: 320px;
+      }
+      .qr-toggle { padding: 9px 10px; border-radius: 11px; }
+      #qrCanvas { width: 122px; height: 122px; }
+    }
+
+    /* Touch-friendly behavior */
+    @media (hover: none) and (pointer: coarse) {
+      .qr-toggle { padding: 12px 14px; }
+    }
+
+    /* Respect reduced motion (no animation here, but keeps it future-safe) */
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; }
+    }
+    .fs-btn{
+  display: inline-block;
+  margin: 0 auto 14px;
+  padding: 10px 16px;
+  font-weight: 700;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+
+  background: var(--accent2);
+  color: #fff;
+
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+}
+
+  </style>
+</head>
+
+<body>
+  <header>Koala Spies Sydney</header>
+
+  <!-- QR generator (top-left) -->
+  <div class="qr-float" aria-label="Share via QR">
+    <button id="qrToggle" class="qr-toggle" type="button">Share via QR</button>
+    <div id="qrContainer" class="qr-container" hidden>
+      <canvas id="qrCanvas" width="130" height="130"></canvas>
+
+    </div>
+  </div>
+
+  <main>
+    <div class="tile-content">
+      <iframe src="Columbia.pdf" title="Columbia PDF"></iframe>
+      <button id="fsBtn" class="fs-btn">Full screen</button>
+
+
+      <!-- centered under the palette -->
+      <a class="download-center" href="Columbia.pdf" target="_blank" rel="noopener">Download the PDF</a>
+
+      <div class="questions">
+        <ol>
+          <li>
+            Read the first paragraph and find:
+            <ol type="a">
+              <li>a word that means very complex</li>
+              <li>a word that describes when someone closes their eyes a little bit to see better</li>
+              <li>a word that means messy and disorganized</li>
+            </ol>
+          </li>
+
+          <li>Why is he holding the ring close to the light?</li>
+
+          <li>What does a home-cum-workshop mean?</li>
+        </ol>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <nav>
+      <a href="KSSindex.html">Home</a>
+      <a href="Kssabout.index.html">About</a>
+      <a href="KSScontact.index.html">Contact</a>
+    </nav>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script>
+  const iframe = document.querySelector('.tile-content iframe');
+  const fsBtn = document.getElementById('fsBtn');
+
+  fsBtn.addEventListener('click', async () => {
+    if (!document.fullscreenElement) {
+      // ENTER fullscreen
+      if (iframe.requestFullscreen) {
+        await iframe.requestFullscreen();
+      } else if (iframe.webkitRequestFullscreen) {
+        iframe.webkitRequestFullscreen(); // iOS Safari
+      }
+      fsBtn.textContent = 'Exit full screen';
+    } else {
+      // EXIT fullscreen
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen(); // iOS Safari
+      }
+      fsBtn.textContent = 'Full screen';
+    }
+  });
+
+  // Safety net: if user exits via ESC / gesture
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+      fsBtn.textContent = 'Full screen';
+    }
+  });
+</script>
+    
+</body>
+</html>
